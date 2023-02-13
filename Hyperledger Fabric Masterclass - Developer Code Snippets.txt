@@ -1,0 +1,1069 @@
+********************
+*      LAB 1       *
+********************
+*** SNIPPET 1.1
+cd ~/Desktop/fabric/cc
+
+
+
+*** SNIPPET 1.2
+mkdir src && cd src
+mkdir btacoin && cd btacoin
+
+
+
+*** SNIPPET 1.3
+touch btacoin.go
+
+
+
+*** SNIPPET 1.4
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"strconv"
+	"bytes"
+)
+
+
+
+*** SNIPPET 1.5
+**	"github.com/hyperledger/fabric/core/chaincode/shim"
+	peer "github.com/hyperledger/fabric/protos/peer"
+REPLACE WITH:
+    "github.com/hyperledger/fabric-chaincode-go/shim"
+	peer "github.com/hyperledger/fabric-protos-go/peer"
+	
+
+*** SNIPPET 1.6
+func main() {
+	err := shim.Start(new(CoinChaincode))
+	if err != nil {
+		fmt.Printf("Chaincode could not be started: %s", err)
+	}
+}
+
+
+
+*** SNIPPET 1.7
+type CoinChaincode struct {
+}
+
+type btaCoin struct {
+	CoinID int `json:"coinID"`
+	FullName string `json:"fullName"`
+	CourseName string `json:"courseName"`
+	Score int `json:"score"`
+}
+
+
+
+*** SNIPPET 1.8
+func (Contract *CoinChaincode) Init(stub shim.ChaincodeStubInterface) peer.Response {
+}
+
+
+
+*** SNIPPET 1.9
+func (Contract *CoinChaincode) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
+}
+
+
+
+*** SNIPPET 1.10
+fnType, args := stub.GetFunctionAndParameters()
+
+
+
+*** SNIPPET 1.11
+	if len(args) == 0 {
+		return shim.Error("Please rerun w/ an approved method... Methods are: returnCoinBank \n,listCoinsByCourse \n,findByName \n,createCoin \n, transferCoin \n, or startLedger \n")
+	}
+
+
+
+*** SNIPPET 1.12
+	if fnType == "initLedger" {
+		Contract.initLedger(stub)
+	} else if fnType == "transferCoin" {
+		Contract.transferCoin(stub, args)
+	} else if fnType == "createCoin" {
+		Contract.createCoin(stub, args)
+	} else if fnType == "revokeCoin" {
+		Contract.revokeCoin(stub, args)
+	} else if fnType == "findByID" {
+		Contract.findByID(stub, args)
+	} else if fnType == "returnCoinBank" {
+		Contract.returnCoinBank(stub)
+	} else if fnType == "findByAttributes" {
+		Contract.findByAttributes(stub, args)
+	} else if fnType == "showCoinsAbovePercentage" {
+		Contract.showCoinsAbovePercentage(stub, args)
+	}
+
+
+
+*** SNIPPET 1.13
+	return shim.Success(nil)
+
+
+
+*** SNIPPET 1.14	
+ else {
+		return shim.Error("Please rerun w/ an approved method... Methods are: returnCoinBank \n,listCoinsByCourse \n,findByName \n,createCoin \n, transferCoin \n, or startLedger \n")
+	}
+
+
+
+*** SNIPPET 1.15
+func (Contract *CoinChaincode) createCoin(stub shim.ChaincodeStubInterface, args []string) peer.Response
+{ 
+}
+
+
+
+*** SNIPPET 1.16
+	params := stub.GetStringArgs()
+	fmt.Println("The params passed in are:", params)
+
+
+
+*** SNIPPET 1.17
+	if len(params) != 3 {
+		fmt.Println("Please resubmit in this particular order: createCoin, COINID, Course Name")
+		return shim.Error("Please resubmit in this particular order: COINID, Course Name")
+	}
+
+
+
+*** SNIPPET 1.18
+	coinUID := params[1]
+	coinuid, err := strconv.Atoi(coinUID).
+
+
+
+*** SNIPPET 1.19	
+	if err != nil {
+		return shim.Error("Something went wrong!" + err.Error())
+	}
+	
+
+
+*** SNIPPET 1.20
+	var coinDetails = btaCoin{CoinID: coinuid, FullName: "Unassigned", CourseName: params[2], Score: 0}
+
+	
+	
+*** SNIPPET 1.21
+	oldKeyVal, err := stub.GetState(coinUID)
+	if oldKeyVal != nil {
+		fmt.Println("There's a coin with the same ID here. Use a different ID. Error Code: " + err.Error())
+	}
+
+
+
+*** SNIPPET 1.22
+	newCoin, err := json.Marshal(coinDetails)
+	if err != nil {
+		shim.Error("Something went wrong in serializing. Error: " + err.Error())
+	} else {
+		err = stub.PutState(args[0], newCoin)
+		if err != nil {
+			shim.Error("Something went wrong while adding the coin. Error: " + err.Error())
+		}
+	}
+	return shim.Success(nil)
+
+
+
+*** SNIPPET 1.23
+func (Contract *CoinChaincode) transferCoin(stub shim.ChaincodeStubInterface, args []string) peer.Response {
+	args = stub.GetStringArgs()
+	if len(args) != 5 {
+		fmt.Println("There is an error...Please rerun with 4 arguments")
+		return shim.Error("Incorrect number of arguments. Expecting 4")
+	}
+}
+
+
+
+*** SNIPPET 1.24
+	coinUID := string(args[1])
+	cName := string(args[2])
+	pName := string(args[3])
+	score := string(args[4])
+	
+	
+
+*** SNIPPET 1.25
+	foundCoin, err := stub.GetState(coinUID)
+	fmt.Println("Here's the response: ", foundCoin)
+	if err != nil {
+		shim.Error("Something went wrong! Error Status:" + err.Error())
+	}
+
+
+
+*** SNIPPET 1.26
+	changedCoin := btaCoin{}
+	json.Unmarshal(foundCoin, changedCoin)
+	intCoinUID, err := strconv.Atoi(coinUID)
+	
+
+
+*** SNIPPET 1.27
+	changedCoin.CoinID = intCoinUID
+	changedCoin.FullName = pName
+	changedCoin.CourseName = cName
+	changedCoin.Score, err = strconv.Atoi(score)
+
+	putChangedCoin, err := json.Marshal(changedCoin)
+	stub.PutState(coinUID, putChangedCoin)
+
+	return shim.Success(nil)
+
+
+
+*** SNIPPET 1.28
+func (Contract *CoinChaincode) revokeCoin(stub shim.ChaincodeStubInterface, args []string) peer.Response { 
+}
+
+
+
+
+*** SNIPPET 1.29
+	coinToRemoveargs := stub.GetStringArgs()
+	if len(coinToRemoveargs) != 3 {
+		fmt.Println("Args are not correct! Please provide two input parameters!")
+	}
+
+	cName := coinToRemoveargs[3]
+	coinToRemove := coinToRemoveargs[2]
+
+	existingCoin, err := stub.GetState(coinToRemove)
+	if err != nil {
+		return shim.Error("Coin Does not exist! Error message: " + err.Error())
+	}
+
+	btacoin := btaCoin{}
+	json.Unmarshal(existingCoin, btacoin)
+
+	if existingCoin != nil {
+		if btacoin.CourseName == cName {
+			stub.DelState(coinToRemove)
+		}
+	}
+
+	return shim.Success(existingCoin)
+
+
+
+*** SNIPPET 1.30
+func (Contract *CoinChaincode) initLedger(stub shim.ChaincodeStubInterface) peer.Response {
+	coinBank := []btaCoin{
+		btaCoin{CoinID: 1, FullName: "Genesis Coin", CourseName: "Architect", Score: 100},
+	}	
+	coinBuffer, err := json.Marshal(coinBank)
+	if err != nil {
+		fmt.Println("Error Occurred: ", err.Error())
+	}
+	
+	fmt.Println("Created and now preparing your Genesis Coin for commit: ", coinBank)
+	
+	stub.PutState("1", coinBuffer)
+	
+	return shim.Success(nil)
+}
+
+
+
+*** SNIPPET 1.31
+	Contract.initLedger(stub)
+	return shim.Success(nil)
+
+
+
+
+********************
+*      LAB 2       *
+********************
+
+*** SNIPPET 2.1
+func (Contract *CoinChaincode) findByID(stub shim.ChaincodeStubInterface, args []string) peer.Response {
+}
+
+
+
+*** SNIPPET 2.2
+	params := stub.GetStringArgs()
+	coinID := params[1]
+	fmt.Println("Coin ID you turned in are: ", coinID)
+	if len(params) != 2 {
+		fmt.Println("Please pass in the coinID")
+	}
+
+
+
+*** SNIPPET 2.3
+	coinFound, err := stub.GetState(coinID)
+	if err != nil {
+		fmt.Println("Couldn't find coin! Please Try again", err.Error())
+	}
+
+
+
+*** SNIPPET 2.4
+	if len(coinFound) == 0 {
+		return shim.Error("Coin does not exist! Please Try again")
+	}
+	fmt.Println("Here is the coin result from your query:", coinFound)
+	
+
+
+*** SNIPPET 2.5
+	foundCoin := btaCoin{}
+	json.Unmarshal(coinFound, &foundCoin)
+	fmt.Println("Here is the human readable version: \n Course Name:", foundCoin)
+	
+	return shim.Success(coinFound)
+
+
+
+*** SNIPPET 2.6
+func (Contract *CoinChaincode) returnCoinBank(stub shim.ChaincodeStubInterface) peer.Response {
+}
+
+
+
+*** SNIPPET 2.7
+	keyIteratorInterface, err := stub.GetStateByRange("", "")
+	if err != nil {
+		fmt.Println("Error when grabbing the Range:", err.Error())
+	}
+
+
+
+*** SNIPPET 2.8
+	var courseCoins []string
+
+	
+
+*** SNIPPET 2.9
+	for keyIteratorInterface.HasNext() {
+		currentCoin, error := keyIteratorInterface.Next()
+		if error != nil {
+			return shim.Error(error.Error())
+		}
+		
+		fmt.Println("The current coin Values \n Key: ", currentCoin.GetKey(), "\n Value: ", currentCoin.GetValue())
+		
+		key := string(currentCoin.GetKey())
+		value := string(currentCoin.GetValue())
+		
+		coinFoundObject := "{\"Key\":" + key + "\",\"token\":" + value + "}"
+		
+		courseCoins = append(courseCoins, coinFoundObject)
+	}
+		
+
+
+*** SNIPPET 2.10
+	fmt.Println("Here is your full list of coins in your Coin Bank. \n", courseCoins)
+
+
+
+*** SNIPPET 2.11
+	coursecoinsBytes := &bytes.Buffer{}
+	gob.NewEncoder(coursecoinsBytes).Encode(courseCoins)
+
+
+
+*** SNIPPET 2.12
+	return shim.Success(coursecoinsBytes.Bytes())
+
+
+
+*** SNIPPET 2.13
+	"encoding/gob"
+
+
+
+*** SNIPPET 2.14
+func (Contract *CoinChaincode) findByAttributes(stub shim.ChaincodeStubInterface, args []string) peer.Response {
+	return shim.Success(nil)
+}
+
+func (Contract *CoinChaincode) showCoinsAbovePercentage(stub shim.ChaincodeStubInterface, args []string) peer.Response {
+	return shim.Success(nil)
+}
+
+
+
+
+********************
+*      LAB 3       *
+********************
+*** SNIPPET 3.1
+cd ~/Desktop/fabric/cc/src
+
+*** go get -u github.com/hyperledger/fabric/core/chaincode/shim
+*** REPLACE WITH:
+go get -u github.com/hyperledger/fabric-chaincode-go/shim
+go get -u github.com/hyperledger/fabric-protos-go
+sudo cp -avr ~/src/github.com ~/Desktop/fabric/cc/src
+
+cd btacoin
+
+
+
+*** SNIPPET 3.2
+go build -o btacoin
+
+
+
+*** SNIPPET 3.3
+    command: peer node start --peer-chaincodedev=true
+
+
+
+*** SNIPPET 3.4
+  btacoincc:
+    container_name: btacoincc
+    image: hyperledger/fabric-ccenv
+    tty: true
+    environment:
+      - GOPATH=/opt/gopath/src
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=debug
+      - CORE_PEER_ID=btacoincc
+      - CORE_PEER_ADDRESS=Andy.BTA.btacoin.com:7051
+      - CORE_PEER_LOCALMSPID=BTAMSP
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/BTA.btacoin.com/users/Admin@BTA.btacoin.com/msp
+    working_dir: /opt/gopath/src/btacoin
+    command: /bin/bash -c 'sleep 6000000'
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./msp:/etc/hyperledger/msp
+      - ../cc/src/:/opt/gopath/src/
+    depends_on:
+      - Devorderer.btacoin.com
+      - Andy.BTA.btacoin.com
+    networks:
+      - btacoin
+
+
+
+*** SNIPPET 3.5
+cd ~/Desktop/fabric/network
+./start.sh
+
+
+
+*** SNIPPET 3.6
+docker exec -it btacoincc bash
+
+
+
+*** SNIPPET 3.7
+CORE_PEER_ADDRESS=Andy.BTA.btacoin.com:7052 \
+CORE_CHAINCODE_ID_NAME=btacoin:0 \
+./btacoin
+
+REPLACE WITH:
+CORE_PEER_ADDRESS=Andy.BTA.btacoin.com:7052 CORE_CHAINCODE_ID_NAME=btacoin:0 CORE_PEER_TLS_ENABLED=false ./btacoin -peer.address Andy.BTA.btacoin.com:7052
+
+
+
+
+*** SNIPPET 3.8
+cd ~/Desktop/fabric/network
+docker exec -it cli bash
+
+
+
+*** SNIPPET 3.9
+export CORE_PEER_LOCALMSPID=BTAMSP
+export CORE_PEER_ADDRESS=Andy.BTA.btacoin.com:7051
+export CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/BTA.btacoin.com/users/Admin@BTA.btacoin.com/msp
+
+
+
+*** SNIPPET 3.10
+peer chaincode install -p btacoin/ -n btacoin -v 0
+
+
+
+*** SNIPPET 3.11
+peer chaincode instantiate -n btacoin -v 0 -c '{"Args":["init"]}' -C btamembersonly
+peer chaincode instantiate -n btacoin -v 0 -c '{"Args":["init"]}' -C coinexchangechannel
+
+
+
+*** SNIPPET 3.12
+peer chaincode list --installed
+
+
+
+*** SNIPPET 3.13
+peer chaincode list -–instantiated -C btamembersonly
+peer chaincode list -–instantiated -C coinexchangechannel
+
+
+
+*** SNIPPET 3.14
+peer chaincode invoke -c '{"Args":["createCoin","2","Blockchain Architecture"]}' -C coinexchangechannel -n btacoin
+peer chaincode invoke -c '{"Args":["createCoin","3","Blockchain Architecture"]}' -C coinexchangechannel -n btacoin
+
+
+
+*** SNIPPET 3.15
+peer chaincode invoke -c '{"Args":["transferCoin", "2", "Blockchain Architecture", "Andy", "90"]}' -C coinexchangechannel -n btacoin
+
+
+
+*** SNIPPET 3.16
+peer chaincode invoke -c '{"Args":["findByID","2"]}' -C coinexchangechannel -n btacoin
+
+
+
+
+********************
+*      LAB 4       *
+********************
+*** SNIPPET 4.1
+cd ~/Desktop/fabric/cc/src/
+mkdir compositebtacoin && cd compositebtacoin
+touch compositebtacoin.go
+
+
+
+*** SNIPPET 4.2
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"strconv"
+	"github.com/hyperledger/fabric/core/chaincode/shim"
+	peer "github.com/hyperledger/fabric/protos/peer"
+)
+REPLACE WITH:
+import (
+	"encoding/json"
+	"fmt"
+	"strconv"
+	"github.com/hyperledger/fabric-chaincode-go/shim"
+	peer "github.com/hyperledger/fabric-protos-go/peer"
+)
+
+
+//CoinChaincode is the smart contract interface we initialize
+type CoinChaincode struct {
+}
+
+// btaCoin is the type asset we are tracking
+type btaCoin struct {
+	CoinID int `json:"coinID"`
+	FullName string `json:"fullName"`
+	CourseName string `json:"courseName"`
+	Score int `json:"score"`
+}
+// Init is The initialization function
+func (Contract *CoinChaincode) Init(stub shim.ChaincodeStubInterface) peer.Response {
+	// Throw away func Name and get Parameters
+	Contract.initLedger(stub)
+	return shim.Success(nil)
+}
+
+func main() {
+	err := shim.Start(new(CoinChaincode))
+	if err != nil {
+		fmt.Printf("Chaincode couldnt start:" + err.Error())
+	}
+}
+
+
+
+*** SNIPPET 4.3
+func (Contract *CoinChaincode) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
+	fnType, args := stub.GetFunctionAndParameters()
+	if len(args) == 0 {
+		return shim.Error("Incorrect Calling for arguments")
+	}
+	if fnType == "initLedger" {
+		Contract.initLedger(stub)
+	} else if fnType == "findByAttributes" {
+		Contract.findByAttributes(stub, args)
+	}
+	return shim.Success(nil)
+}
+
+
+
+*** SNIPPET 4.4
+func (Contract *CoinChaincode) initLedger(stub shim.ChaincodeStubInterface) {
+}
+
+
+
+
+*** SNIPPET 4.5
+	stub.PutState("FullName~CourseName", []byte{0x00})
+
+
+
+*** SNIPPET 4.6
+	owners := []string{"GenesisCoin", "John", "Denny", "Ron", "Kris"}
+
+
+
+*** SNIPPET 4.7
+	for i, owner := range owners {
+		coinID := i + 1
+		currCoin := btaCoin{CoinID: coinID, FullName: owner, CourseName: "Architect", Score: 100}
+		
+		coinBuffer, err := json.Marshal(currCoin)
+		if err != nil {
+			fmt.Println("Something went wrong!")
+		}
+
+		fmt.Println("Created and now preparing your coin #"+strconv.Itoa(coinID), " for commit: ")
+		
+		compKey, err := stub.CreateCompositeKey("FullName~CourseName", []string{currCoin.FullName, currCoin.CourseName})
+		
+		if err != nil {
+			fmt.Println("Something went wrong!")
+		}
+		
+		stub.PutState(compKey, coinBuffer)		
+	}
+
+
+
+*** SNIPPET 4.8
+func (Contract *CoinChaincode) findByAttributes(stub shim.ChaincodeStubInterface, args []string) peer.Response {
+	// The function will begin by displaying a status message. 
+	fmt.Println("Creating the composite key to query with...")
+	
+	// Next, the composite key to search the database for will be created. 
+	compositeKey, err := stub.CreateCompositeKey("FullName~CourseName", args)
+	
+	// Any returned errors will be handled.
+	if err != nil {
+		return shim.Error("Something happened wrong: " + err.Error())
+	}
+	
+	// Print another status message.
+	fmt.Println("Initializing query using Composite Key")
+	
+	// Use the getState call to query using the composite key. Handle any return errors.
+	CoinFoundBytes, err := stub.GetState(compositeKey)
+	if err != nil {
+		return shim.Error("Could not find Coin! Error message: " + err.Error())
+	}
+	
+	// Print status information to the console.
+	fmt.Println("Here is the returned coin info! ", CoinFoundBytes)
+	
+	// Return success status to caller.
+	return shim.Success(CoinFoundBytes)
+}
+
+
+
+*** SNIPPET 4.9
+cd ~/Desktop/fabric/cc/src/compositebtacoin
+
+
+
+*** SNIPPET 4.10
+go build -o compositebtacoin
+
+
+
+*** SNIPPET 4.11
+docker exec -it btacoincc bash
+
+
+
+*** SNIPPET 4.12
+cd ../compositebtacoin
+
+CORE_PEER_ADDRESS=Andy.BTA.btacoin.com:7052 \
+CORE_CHAINCODE_ID_NAME=btacoinComp:0 \
+./compositebtacoin
+REPLACE  WITH:
+CORE_PEER_ADDRESS=Andy.BTA.btacoin.com:7052 CORE_CHAINCODE_ID_NAME=btacoinComp:0 CORE_PEER_TLS_ENABLED=false ./compositebtacoin -peer.address Andy.BTA.btacoin.com:7052
+
+
+*** SNIPPET 4.13
+cd ~/Desktop/fabric/network
+docker exec -it cli bash
+
+
+
+*** SNIPPET 4.14
+export CORE_PEER_LOCALMSPID=BTAMSP
+export CORE_PEER_ADDRESS=Andy.BTA.btacoin.com:7051
+export CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/BTA.btacoin.com/users/Admin@BTA.btacoin.com/msp
+
+
+
+*** SNIPPET 4.15
+peer chaincode install -p compositebtacoin/ -n btacoinComp -v 0
+
+
+
+*** SNIPPET 4.16
+peer chaincode instantiate -n btacoinComp -v 0 -c '{"Args":["init"]}' -C coinexchangechannel
+
+
+
+*** SNIPPET 4.17
+peer chaincode query -c '{"Args":["findByAttributes", "Ron","Architect"]}' -C coinexchangechannel -n btacoinComp
+
+
+
+
+********************
+*      LAB 5       *
+********************
+*** SNIPPET 5.1
+cd ~/Desktop/fabric/network
+touch BTAconnection.yaml
+
+
+
+*** SNIPPET 5.2
+name: btacoin
+version: 1.0.0
+
+
+
+*** SNIPPET 5.3
+client:
+  organization: BTA
+  connection:
+    timeout:
+        peer: 100000
+        orderer: 100000
+
+
+
+*** SNIPPET 5.4
+channels:
+  btamembersonly:
+    orderers:
+      - Devorderer.btacoin.com
+    peers:
+      Andy.BTA.btacoin.com: []
+  coinexchangechannel:
+    orderers:
+      - Devorderer.btacoin.com
+    peers:
+      Andy.BTA.btacoin.com: []
+      Ken.courseParticipants.btacoin.com: []
+
+
+
+*** SNIPPET 5.5
+organizations:
+  BTA:
+    mspid: BTAMSP
+    peers:
+      - Andy.BTA.btacoin.com
+    certificateAuthorities:
+      - btaCA.btacoin.com
+    courseParticipants:
+      mspid: courseParticipantsMSP
+      peers:
+        - Ken.courseParticipants.btacoin.com
+      certificateAuthorities:
+        - courseParticipantsCA.btacoin.com
+
+
+
+*** SNIPPET 5.6
+orderers:
+  Devorderer.btacoin.com:
+    url: grpc://localhost:7050
+
+
+
+*** SNIPPET 5.7
+peers:
+  Andy.BTA.btacoin.com:
+    url: grpc://localhost:7051
+    grpcOptions:
+      request-timeout: 5000000
+  Ken.courseParticipants.btacoin.com: 
+    url: grpc://172.17.0.1:8051
+
+
+
+*** SNIPPET 5.8
+certificateAuthorities:
+  btaCA.btacoin.com:
+    url: http://localhost:7054
+    caName: btaCA.btacoin.com
+  courseParticipantsCA.btacoin.com:
+    url: http://localhost:8054
+    caName: courseParticipantsCA.btacoin.com
+    
+
+
+************************
+LAB 6
+************************
+
+cd ~/Desktop/fabric/
+mkdir client && cd client
+mkdir src && cd src
+mkdir fabricNetwork && cd fabricNetwork
+touch identity.js
+
+
+cd ..
+npm init
+** package name: client
+** version: 1.0.0
+** description: Client for the btacoin network
+** entry point: invoke.js
+**** accept all other default value
+**** Is this OK? yes
+
+cd fabricNetwork
+npm install fabric-network --save
+npm install fabric-ca-client --save
+
+Open docker-compose.yml for editing.
+On the container definition for btaCA.btacoin.com change command to:
+command: sh -c 'fabric-ca-server start -b btaCA:SimplePassword' 
+
+
+Open identity.js for editing
+INSERT INTO identity.js:
+// DEPENDENCIES
+// Allows access to Fabric CA Client
+const CAClient = require('fabric-ca-client');
+
+// Fabric Network Items:
+// X.509 Wallet
+// Filesystem wallet implementaion - wallet will be stored on filesystem
+// Gateway - allows peer connections
+const {
+    X509WalletMixin, 
+    FileSystemWallet,
+    Gateway
+} = require('fabric-network');
+
+// Non-Fabric Items:
+// JavaScript YAML package - allows interaction with conenction profile
+const yaml = require("js-yaml");
+// Path module
+const path = require("path");
+// Filesystem module
+const fs = require("fs");
+
+
+// Import Connection Profile
+// Path to Connection Profile
+const cpPath = path.join(__dirname , "../../../network/BTAconnection.yaml");
+// Load the Connection Profile
+const connection = yaml.safeLoad(fs.readFileSync(cpPath, "utf-8"));
+
+// Global Variables
+// Is the default admin (bootstrap admin) enrolled?
+var bootstrapAdminEnrolled = false;
+var wallet;
+
+// Create a wallet instance
+// Register and enroll admin
+async function main() {
+    try{
+        console.log("Running the Admin Enrollment Function");
+
+        // Initial wallet setup
+        // Path to wallet (join dirname and 'wallet' folder)
+        const WalletLocation = path.join(__dirname, "/wallet");
+        wallet = new FileSystemWallet(WalletLocation);
+
+        // Check to see if admin is already enrolled
+        if (bootstrapAdminEnrolled == true) {
+            console.log("Bootstrap admin is already enrolled, no need to generate cryptographic certificate");
+            return;
+        } else {
+            console.log("Generating cryptographic certificate for bootstrap admin");
+            // Get the Fabric CA address by returning the URL of the btaCA.btacoin.com Certificate Authority 
+            const BTACAaddress = connection.certificateAuthorities["btaCA.btacoin.com"].url;            
+
+            // Initialize new version of the Fabric-CA-Client
+            const BTACA = new CAClient(BTACAaddress);
+
+            // Enrollment Function
+            // Store return value of enroll function
+            const bootstrap = await BTACA.enroll({
+                enrollmentID: "btaCA",
+                enrollmentSecret: "SimplePassword", 
+            });
+
+            // Use returned credentials to create an identity
+            const identity = X509WalletMixin.createIdentity(
+                "BTAMSP",
+                bootstrap.certificate,
+                bootstrap.key.toBytes()
+            );
+
+            // Import new identity into wallet
+            wallet.import("admin", identity);
+        }
+
+    } catch (err) {
+        console.log("Something went wrong!");
+    }
+    return;
+};
+
+main();
+
+
+
+cd ~/Desktop/fabric/client/src/fabricNetwork
+node identity.js
+
+
+
+
+
+********************
+LAB 7
+********************
+
+cd ~/Desktop/fabric/client/src/fabricNetwork
+touch invoke.js
+
+
+
+Open invoke.js for editing, add the code below:
+// DEPENDENCIES
+// Allows access to Fabric CA Client
+const CAClient = require('fabric-ca-client');
+
+// Fabric Network Items:
+// X.509 Wallet
+// Filesystem wallet implementaion - wallet will be stored on filesystem
+// Gateway - allows peer connections
+const {
+    X509WalletMixin, 
+    FileSystemWallet,
+    Gateway
+} = require('fabric-network');
+
+// Non-Fabric Items:
+// JavaScript YAML package - allows interaction with conenction profile
+const yaml = require("js-yaml");
+// Path module
+const path = require("path");
+// Filesystem module
+const fs = require("fs");
+
+
+// Import Connection Profile
+// Path to Connection Profile
+const cpPath = path.join(__dirname , "../../../network/BTAconnection.yaml");
+// Load the Connection Profile
+const connection = yaml.safeLoad(fs.readFileSync(cpPath, "utf-8"));
+
+// Global Variables
+var wallet;
+const oldCoinIdToSearch = "2";
+const newCoinIdToCreate = "1217";
+const newCoinCourseName = "Fabric Developer";
+
+// This function handles queries and transactions
+// operationType is 'query' or 'transact'
+async function invoke(operationType, coinId) {
+    console.log('invoke');
+    try {
+        const gateway = new Gateway();
+        await gateway.connect(connection, {
+            wallet: wallet,
+            identity: "admin",
+            discovery: false,
+            eventHandlerOptions: {
+                commitTimeout: 100
+            }
+        })
+
+        // Connect to coinexchangechannel
+        var coinExchangeChannel = await gateway.getNetwork("coinexchangechannel");
+        const btacoin = await coinExchangeChannel.getContract("btacoin");
+
+        // Return value from chaincode call
+        let value;
+
+        // Force operationType to lower case for comparison
+        operationType = operationType.toLowerCase();
+
+        if (operationType == "query") {
+            console.log("operationType is query");
+            //Query Transaction Request
+            // Use evaluateTransaction as this is a query
+            value = await btacoin.evaluateTransaction("findByID", coinId);
+        } else if (operationType == "transact") {
+            console.log("operationType is transact");
+            // General Transaction Proposal
+            // Use submitTransaction as this is a tranasction this will be included on the ledger / world state
+            await btacoin.submitTransaction("createCoin", coinId, newCoinCourseName);
+        } else {
+            console.log("You did not enter a valid option:\ntransact \nquery ");
+        }
+
+    } catch (err){
+        console.log("ERROR!\n" + err.toString());
+    }    
+};
+
+
+// Main function to perform all calls
+// This function acts as a simple 'client' to the chaincode
+async function main() {
+    console.log('main');
+
+    try{
+        // Initial wallet setup
+        // Path to wallet (join dirname and 'wallet' folder)
+        const WalletLocation = path.join(__dirname, "/wallet");
+        wallet = new FileSystemWallet(WalletLocation);
+
+        // Query for existing coin
+        console.log('Querying for existing coin: ' + oldCoinIdToSearch);
+        await invoke("query", oldCoinIdToSearch);
+
+        // Create a new Coin
+        console.log('Creating new coin: ' + newCoinIdToCreate + ' for course: ' + newCoinCourseName);
+        await invoke("transact", newCoinIdToCreate);
+
+        // Query for coin that was just created
+        console.log('Querying for new coin: ' + newCoinIdToCreate);
+        await invoke("query", newCoinIdToCreate);
+
+        console.log("All done!");
+
+    } catch (err) {
+        console.log("Something went wrong!\n" + err);
+    }
+}
+
+main();
+
+
+
+Edit the newCoinIdToCreate and newCoinCourseName variables as desired.
+
+
+
+Run the command:
+node invoke.js

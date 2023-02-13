@@ -1,0 +1,1233 @@
+***** LAB1
+
+SNIPPET 1.1
+cd ~/Desktop
+mkdir fabric
+cd fabric
+mkdir sdk
+mkdir network
+mkdir cc
+
+
+SNIPPET 1.2
+sudo apt update
+
+
+SNIPPET 1.3
+sudo apt -y upgrade --allow-unauthenticated
+
+
+SNIPPET 1.4
+sudo apt install curl
+
+
+SNIPPET 1.5
+sudo apt install git
+
+
+SNIPPET 1.6
+sudo apt update
+
+
+SNIPPET 1.7
+sudo apt install apt-transport-https
+
+
+SNIPPET 1.8
+sudo apt install ca-certificates
+
+
+SNIPPET 1.9
+sudo apt install gnupg-agent
+
+
+SNIPPET 1.10
+sudo apt install software-properties-common
+
+
+SNIPPET 1.11
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+
+SNIPPET 1.12
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+
+SNIPPET 1.13
+sudo apt update
+
+
+SNIPPET 1.14
+sudo apt -y install docker-ce
+
+
+SNIPPET 1.15
+sudo usermod -aG docker student
+
+
+SNIPPET 1.16
+docker -v
+
+
+SNIPPET 1.17
+sudo curl -L https://github.com/docker/compose/releases/download/1.18.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+
+
+SNIPPET 1.18
+sudo chmod +x /usr/local/bin/docker-compose
+
+
+SNIPPET 1.19
+sudo reboot now
+
+
+SNIPPET 1.20
+docker-compose -v
+
+
+SNIPPET 1.21
+wget https://s3.us-east-2.amazonaws.com/fabric-masterclass/go.tar.gz
+
+
+SNIPPET 1.22
+tar -xvf go.tar.gz
+
+
+SNIPPET 1.23
+sudo mv go /usr/local/go
+
+
+SNIPPET 1.24
+cd ~/Desktop/fabric/cc
+
+
+SNIPPET 1.25
+export GOPATH=$PWD
+
+
+SNIPPET 1.26
+echo $GOPATH
+
+
+SNIPPET 1.27
+gedit ~/.profile
+
+
+SNIPPET 1.28
+export GOROOT=/usr/local/go
+export GOPATH=/home/student
+export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+
+
+SNIPPET 1.29
+source ~/.profile
+
+
+SNIPPET 1.30
+go version
+
+
+SNIPPET 1.31
+curl -sL https://deb.nodesource.com/setup_8.x | sudo bash -
+
+
+SNIPPET 1.32
+sudo apt install nodejs
+
+
+SNIPPET 1.33
+node -v
+npm -v
+
+
+
+
+
+
+
+
+
+***** LAB2
+SNIPPET 2.1
+cd ~/Desktop/fabric/network
+
+
+SNIPPET 2.2
+touch configtx.yaml
+touch crypto-config.yaml
+touch docker-compose.yml
+
+
+SNIPPET 2.3
+mkdir config
+mkdir defaults
+
+
+SNIPPET 2.4
+cd defaults
+
+
+SNIPPET 2.5
+wget https://s3.us-east-2.amazonaws.com/fabric-masterclass/orderer.yaml
+
+
+SNIPPET 2.6
+wget https://s3.us-east-2.amazonaws.com/fabric-masterclass/core.yaml
+
+
+SNIPPET 2.7
+cd ..
+wget https://s3.us-east-2.amazonaws.com/fabric-masterclass/bin.tar.gz
+
+
+SNIPPET 2.8
+tar -xvf bin.tar.gz
+
+
+SNIPPET 2.9
+cd bin
+chmod +755 *
+
+
+SNIPPET 2.10
+sudo mv * /usr/local/bin
+cd ..
+rm -rf bin bin.tar.gz
+
+
+SNIPPET 2.11
+gedit ~/.profile
+
+
+SNIPPET 2.12
+export FABRIC_CFG_PATH=/home/student/Desktop/fabric/network
+export FABRIC_HOME=/home/student/Desktop/fabric/
+
+
+SNIPPET 2.13
+source ~/.profile
+
+
+SNIPPET 2.14
+echo $FABRIC_HOME && echo $FABRIC_CFG_PATH
+
+
+SNIPPET 2.15
+version: '2'
+
+networks:
+    btacoin:
+
+services:
+
+
+SNIPPET 2.16
+GeneralCA.btacoin.com:
+    container_name: GeneralCA.btacoin.com
+    image: hyperledger/fabric-ca
+    environment:
+        - FABRIC_CA_SERVER_CA_NAME=GeneralCA.btacoin.com
+    ports:
+        - 7054:7054
+        
+
+SNIPPET 2.17
+Devorderer.btacoin.com:
+    container_name: Devorderer.btacoin.com
+    image: hyperledger/fabric-orderer
+    environment:
+      - FABRIC_LOGGING_SPEC=info
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_GENESISMETHOD=file
+    ports:
+      - 7050:7050
+      
+
+SNIPPET 2.18
+Andy.BTA.btacoin.com:
+    container_name: Andy.BTA.btacoin.com
+    image: hyperledger/fabric-peer
+    environment:
+        - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${COMPOSE_PROJECT_NAME}_btacoin
+        - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+    ports:
+        - 7051:7051
+        - 7053:7053
+
+
+SNIPPET 2.19
+cli:
+    container_name: cli
+    image: hyperledger/fabric-tools
+    tty: true
+    environment:
+        - GOPATH=/opt/gopath/src
+        - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      
+
+SNIPPET 2.20
+version: '2'
+
+networks:
+  btacoin:
+
+services:
+  GeneralCA.btacoin.com:
+    container_name: GeneralCA.btacoin.com
+    image: hyperledger/fabric-ca
+    environment:
+      - FABRIC_CA_SERVER_CA_NAME=GeneralCA.btacoin.com
+    ports:
+      - 7054:7054
+
+  Devorderer.btacoin.com:
+    container_name: Devorderer.btacoin.com
+    image: hyperledger/fabric-orderer
+    environment:
+      - FABRIC_LOGGING_SPEC=info
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_GENESISMETHOD=file
+    ports:
+      - 7050:7050
+
+  Andy.BTA.btacoin.com:
+    container_name: Andy.BTA.btacoin.com
+    image: hyperledger/fabric-peer
+    environment:
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${COMPOSE_PROJECT_NAME}_btacoin
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+    ports:
+      - 7051:7051
+      - 7053:7053
+
+  cli:
+    container_name: cli
+    image: hyperledger/fabric-tools
+    tty: true
+    environment:
+      - GOPATH=/opt/gopath/src
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+
+
+SNIPPET 2.21
+- FABRIC_LOGGING_SPEC=debug
+
+
+SNIPPET 2.22
+networks:
+- btacoin
+
+
+SNIPPET 2.23
+depends_on:
+- Devorderer.btacoin.com
+
+
+SNIPPET 2.24
+version: '2'
+
+networks:
+  btacoin:
+
+services:
+  GeneralCA.btacoin.com:
+    container_name: GeneralCA.btacoin.com
+    image: hyperledger/fabric-ca
+    environment:
+      - FABRIC_CA_SERVER_CA_NAME=GeneralCA.btacoin.com
+      - FABRIC_LOGGING_SPEC=debug
+    ports:
+      - 7054:7054
+    networks:
+      - btacoin
+
+  Devorderer.btacoin.com:
+    container_name: Devorderer.btacoin.com
+    image: hyperledger/fabric-orderer
+    environment:
+      - FABRIC_LOGGING_SPEC=info
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - FABRIC_LOGGING_SPEC=debug
+    ports:
+      - 7050:7050
+    networks:
+      - btacoin
+
+  Andy.BTA.btacoin.com:
+    container_name: Andy.BTA.btacoin.com
+    image: hyperledger/fabric-peer
+    environment:
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${COMPOSE_PROJECT_NAME}_btacoin
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=debug
+    ports:
+      - 7051:7051
+      - 7053:7053
+    networks:
+      - btacoin
+    depends_on:
+      - Devorderer.btacoin.com
+
+  cli:
+    container_name: cli
+    image: hyperledger/fabric-tools
+    tty: true
+    environment:
+      - GOPATH=/opt/gopath/src
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=debug
+    networks:
+      - btacoin
+    depends_on:
+      - Devorderer.btacoin.com
+
+
+SNIPPET 2.25
+OrdererOrgs:
+
+PeerOrgs:
+
+
+SNIPPET 2.26
+  - Name: btacoinOrderers
+    Domain: btacoin.com
+    Specs:
+      - Hostname: Devorderer
+
+
+SNIPPET 2.27
+- Name: BTA
+Domain: BTA.btacoin.com
+Specs:
+- Hostname: Andy
+
+
+SNIPPET 2.28
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+
+SNIPPET 2.29
+OrdererOrgs:
+  - Name: btacoinOrderers
+    Domain: btacoin.com
+    Specs:
+      - Hostname: Devorderer
+
+PeerOrgs:
+  - Name: BTA
+    Domain: BTA.btacoin.com
+    Specs:
+      - Hostname: Andy
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+
+SNIPPET 2.30
+Organizations:
+
+Application:
+
+Orderer:
+
+Channel:
+
+Profiles:
+
+
+SNIPPET 2.31
+  - &btacoinOrderers:
+    Name: btacoinOrderersMSP
+
+
+SNIPPET 2.32
+    ID: btacoinOrderersMSP
+    MSPDir: crypto-config/ordererOrganizations/btacoin.com/msp
+
+
+SNIPPET 2.33
+  - &BTA
+    Name: BTA
+    ID: BTAMSP
+    MSPDir: crypto-config/peerOrganizations/BTA.btacoin.com/msp
+
+
+SNIPPET 2.34
+    AnchorPeers:
+      - Host: Andy.BTA.btacoin.com
+        Port: 7051
+        
+
+***************** SNIPPET 2.35
+  &ApplicationDefaults
+  
+
+******************* SNIPPET 2.36
+  &DevModeOrdering
+
+
+SNIPPET 2.37
+    OrdererType: solo
+    Addresses:
+      - Devorderer.btacoin.com:7050
+
+
+SNIPPET 2.38
+    BatchTimeout: 1s
+
+
+
+*********************
+********************* SNIPPET 2.38.1
+    BatchSize:
+      MaxMessageCount: 1
+*********************
+*********************
+
+
+SNIPPET 2.39
+  DefaultBlockOrderingService:
+    Orderer:
+      <<: *DevModeOrdering
+      Organizations:
+        - *btacoinOrderers
+    Consortiums:
+      NetworkConsortium:
+        Organizations:
+          - *BTA
+
+
+SNIPPET 2.40
+  btaMembersOnly:
+    Consortium: NetworkConsortium
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *BTA
+
+
+SNIPPET 2.41
+  - &btacoinOrderers
+    Name: btacoinOrderersMSP
+    ID: btacoinOrderersMSP
+    MSPDir: crypto-config/ordererOrganizations/btacoin.com/msp
+    
+  - &BTA
+    Name: BTAMSP
+    ID: BTAMSP
+    MSPDir: crypto-config/peerOrganizations/BTA.btacoin.com/msp
+    AnchorPeers:
+        - Host: Andy.BTA.btacoin.com
+          Port: 7051
+
+Application: 
+  - &ApplicationDefaults
+    Organizations:
+
+Orderer:
+  - &DevModeOrdering
+    OrdererType: solo
+    Addresses:
+      - Devorderer.btacoin.com:7050
+    BatchTimeout: 1s
+    BatchSize:
+      MaxMessageCount: 1
+
+Channel:
+
+Profiles:
+  DefaultBlockOrderingService:
+    Orderer:
+      <<: *DevModeOrdering
+      Organizations:
+        - *btacoinOrderers
+    Consortiums:
+      NetworkConsortium:
+        Organizations:
+          - *BTA
+
+  btaMembersOnly:
+    Consortium: NetworkConsortium
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *BTA
+
+
+SNIPPET 3.1
+cd ~/Desktop/fabric/network
+
+
+SNIPPET 3.2
+cryptogen generate --config=./crypto-config.yaml
+
+
+SNIPPET 3.3
+    volumes:
+      - ./crypto-config/peerOrganizations/BTA.btacoin.com/ca/:/etc/hyperledger/fabric-ca-server-config
+      
+
+SNIPPET 3.4
+ls ./crypto-config/peerOrganizations/BTA.btacoin.com/ca
+
+
+SNIPPET 3.5
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.BTA.btacoin.com-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/YOUR_UNIQUE_SK_GOES_HERE
+
+
+SNIPPET 3.6
+      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/msp/orderer/msp
+      - ORDERER_GENERAL_LOCALMSPID=btacoinOrderersMSP
+
+
+SNIPPET 3.7
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=Andy.BTA.btacoin.com:7051
+      - CORE_PEER_LOCALMSPID=BTAMSP
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/BTA.btacoin.com/users/Admin@BTA.btacoin.com/msp
+      
+
+SNIPPET 3.8
+    volumes:
+      - ./config/:/etc/hyperledger/configtx
+      - ./crypto-config/ordererOrganizations/btacoin.com/orderers/Devorderer.btacoin.com/:/etc/hyperledger/msp/orderer
+      - ./crypto-config/peerOrganizations/BTA.btacoin.com/peers/Andy.BTA.btacoin.com/:/etc/hyperledger/msp/BTA
+
+
+SNIPPET 3.9
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./crypto-config/peerOrganizations/BTA.btacoin.com/peers/Andy.BTA.btacoin.com/msp:/etc/hyperledger/msp/peer
+      - ./crypto-config/peerOrganizations/BTA.btacoin.com/users:/etc/hyperledger/msp/users      
+      - ./config:/etc/hyperledger/configtx      
+      - ./../cc:/etc/hyperledger/chaincode
+
+
+SNIPPET 3.10
+      - CORE_PEER_ID=Andy.BTA.btacoin.com
+      - CORE_PEER_ADDRESS=Andy.BTA.btacoin.com:7051
+      - CORE_PEER_LOCALMSPID=BTAMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/peer/
+
+
+SNIPPET 3.11
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./../cc/:/opt/gopath/src/
+      - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ./config:/etc/hyperledger/configtx
+
+
+SNIPPET 3.12
+    volumes:
+      - ./crypto-config/peerOrganizations/BTA.btacoin.com/ca/:/etc/hyperledger/fabric-ca-server-config
+
+
+SNIPPET 3.13
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+
+
+SNIPPET 3.14
+cd ~/Desktop/fabric/network
+configtxgen -profile DefaultBlockOrderingService -outputBlock ./config/genesis.block -configPath $PWD
+
+
+SNIPPET 3.15
+configtxgen -profile btaMembersOnly -outputCreateChannelTx ./config/btamembersonly.tx -channelID btamembersonly
+
+
+SNIPPET 3.16
+     - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/configtx/genesis.block
+
+
+************** SNIPPET 4.1
+cd ~/Desktop/fabric/network
+docker pull hyperledger/fabric-peer:2.0
+
+
+************** SNIPPET 4.2
+docker pull hyperledger/fabric-orderer:2.0
+
+
+************** SNIPPET 4.3
+docker pull hyperledger/fabric-ca
+
+
+************** SNIPPET 4.4
+docker pull hyperledger/fabric-tools:2.0
+
+
+SNIPPET 4.5
+docker images
+
+
+SNIPPET 4.6
+    command: orderer
+
+
+SNIPPET 4.7
+    command: peer node start
+
+
+SNIPPET 4.8    
+     command: /bin/bash
+
+
+******************************************************
+******************************************************
+SNIPPET 4.8.1
+docker tag hyperledger/fabric-orderer:2.0 hyperledger/fabric-orderer:latest
+docker tag hyperledger/fabric-peer:2.0 hyperledger/fabric-peer:latest
+docker tag hyperledger/fabric-tools:2.0 hyperledger/fabric-tools:latest
+******************************************************
+******************************************************
+
+
+SNIPPET 4.9
+cd ~/Desktop/fabric/network
+docker-compose -f docker-compose.yml up -d Devorderer.btacoin.com Andy.BTA.btacoin.com GeneralCA.btacoin.com cli
+
+
+******** SNIPPET 4.10
+docker exec -it Andy.BTA.btacoin.com sh
+
+
+SNIPPET 4.11
+cd /etc/hyperledger/configtx
+
+
+SNIPPET 4.12
+export CORE_PEER_LOCALMSPID=BTAMSP
+export CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/users/Admin@BTA.btacoin.com/msp
+
+
+SNIPPET 4.13
+peer channel create -o Devorderer.btacoin.com:7050 -f /etc/hyperledger/configtx/btamembersonly.tx -c btamembersonly 
+
+
+SNIPPET 4.14
+ls -l
+
+
+SNIPPET 4.15
+peer channel join -b btamembersonly.block
+
+
+SNIPPET 4.16
+peer channel list
+
+
+
+SNIPPET 5.1
+  Ken.courseParticipants.btacoin.com:
+    container_name: Ken.courseParticipants.btacoin.com
+    image: hyperledger/fabric-peer
+    environment:
+      - CORE_PEER_ID= Ken.courseParticipants.btacoin.com
+      - CORE_PEER_ADDRESS=Ken.courseParticipants.btacoin.com:8051
+      - FABRIC_LOGGING_SPEC=debug
+      - CORE_CHAINCODE_LOGGING_LEVEL=debug
+      - CORE_PEER_LOCALMSPID=courseParticipantsMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/peer/
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${COMPOSE_PROJECT_NAME}_btacoin
+    working_dir: /etc/hyperledger/configtx
+    command: peer node start
+    ports:
+      - 8051:7051
+      - 8053:7053
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./crypto-config/peerOrganizations/courseParticipants.btacoin.com/peers/Ken.courseParticipants.btacoin.com/msp:/etc/hyperledger/msp/peers
+      - ./crypto-config/peerOrganizations/courseParticipants.btacoin.com/users:/etc/hyperledger/msp/users
+      - ./config:/etc/hyperledger/configtx
+    depends_on:
+      - Devorderer.btacoin.com
+    networks:
+      - btacoin
+
+
+SNIPPET 5.2
+  - Name: courseParticipants
+    Domain: courseParticipants.btacoin.com
+    Specs:
+      - Hostname: Ken
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+
+SNIPPET 5.3
+cd Desktop/fabric/network
+
+
+SNIPPET 5.4
+cryptogen extend --config=./crypto-config.yaml
+
+
+SNIPPET 5.5
+ls crypto-config/peerOrganizations/courseParticipants.btacoin.com
+
+
+SNIPPET 5.6
+  - &courseParticipants
+    Name: courseParticipantsMSP
+    ID: courseParticipantsMSP
+    MSPDir: crypto-config/peerOrganizations/courseParticipants.btacoin.com/msp
+    AnchorPeers:
+      - Host: Ken.courseParticipants.btacoin.com
+        Port: 8051
+
+
+SNIPPET 5.7
+  courseParticipantsCA.btacoin.com:
+    container_name: courseParticipantsCA
+    image: hyperledger/fabric-ca
+    environment:
+    - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+    - FABRIC_CA_SERVER_CA_NAME=courseParticipantsCA.btacoin.com
+
+
+SNIPPET 5.8
+ls crypto-config/peerOrganizations/courseParticipants.btacoin.com/ca
+
+
+SNIPPET 5.9
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/PEM_FILE_NAME_GOES_HERE
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/SK_FILE_NAME_GOES_HERE
+    ports:
+      - "8054:7054"
+    command: sh -c 'fabric-ca-server start -b courseParticipantsCA:SimplePassword'
+    volumes:
+      - ./crypto-config/peerOrganizations/courseParticipants.btacoin.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    networks:
+      - btacoin
+
+
+SNIPPET 5.10
+btaCA.btacoin.com:
+container_name: btaCA.btacoin.com
+
+
+SNIPPET 5.11
+Adjust the environment variable
+- FABRIC_CA_SERVER_CA_NAME=GeneralCA.btacoin.com
+to 
+- FABRIC_CA_SERVER_CA_NAME=btaCA.btacoin.com
+
+
+SNIPPET 5.12
+docker rm -f GeneralCA.btacoin.com
+
+
+SNIPPET 5.13
+docker-compose -f docker-compose.yml up -d courseParticipantsCA.btacoin.com btaCA.btacoin.com
+
+
+
+
+****************** LAB 6
+SNIPPET 6.1
+  kafkaServer1.btacoin.com:
+    container_name: kafkaServer1.btacoin.com
+    image: hyperledger/fabric-kafka
+    restart: always
+    environment:
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=2
+      - KAFKA_ZOOKEEPER_CONNECT=zkServer1.btacoin.com:2181,zkServer2.btacoin.com:2181,zkServer3.btacoin.com:2181
+      - KAFKA_BROKER_ID=0
+    ports:
+      - 10092:9092
+      - 10093:9093
+    depends_on:
+      - zkServer1.btacoin.com
+      - zkServer2.btacoin.com
+      - zkServer3.btacoin.com
+    networks:
+      - btacoin
+
+  kafkaServer2.btacoin.com:
+    container_name: kafkaServer2.btacoin.com
+    image: hyperledger/fabric-kafka
+    restart: always
+    environment:
+      - KAFKA_MESSAGE_MAX_BYTES=103809024
+      - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+      - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+      - KAFKA_MIN_INSYNC_REPLICAS=2
+      - KAFKA_DEFAULT_REPLICATION_FACTOR=2
+      - KAFKA_ZOOKEEPER_CONNECT=zkServer1.btacoin.com:2181,zkServer2.btacoin.com:2181,zkServer3.btacoin.com:2181
+      - KAFKA_BROKER_ID=1
+    ports:
+      - 9092:9092
+      - 9093:9093
+    depends_on:
+      - zkServer1.btacoin.com
+      - zkServer2.btacoin.com
+      - zkServer3.btacoin.com
+    networks:
+      - btacoin
+
+
+SNIPPET 6.2
+  zkServer1.btacoin.com:
+    container_name: zkServer1.btacoin.com
+    image: hyperledger/fabric-zookeeper
+    environment:
+      - ZOO_MY_ID=1
+      - ZOO_SERVERS=server.1=zkServer1.btacoin.com:2888:3888 server.2=zkServer2.btacoin.com:2888:3888 server.3=zookeeper3.btacoin.com:2888:3888
+    ports:
+      - 12181:2181
+      - 12888:2888
+      - 13888:3888
+    networks:
+      - btacoin
+
+  zkServer2.btacoin.com:
+    container_name: zkServer2.btacoin.com
+    image: hyperledger/fabric-zookeeper
+    environment:
+      - ZOO_MY_ID=2
+      - ZOO_SERVERS=server.1=zkServer1.btacoin.com:2888:3888 server.2=zkServer2.btacoin.com:2888:3888 server.3=zkServer3.btacoin.com:2888:3888
+    ports:
+      - 2181:2181
+      - 2888:2888
+      - 3888:3888
+    networks:
+      - btacoin
+      
+  zkServer3.btacoin.com:
+    container_name: zkServer3.btacoin.com
+    image: hyperledger/fabric-zookeeper
+    environment:
+      - ZOO_MY_ID=3
+      - ZOO_SERVERS=server.1=zkServer1.btacoin.com:2888:3888 server.2=zkServer2.btacoin.com:2888:3888 server.3=zkServer3.btacoin.com:2888:3888
+    ports:
+      - 22181:2181
+      - 22888:2888
+      - 23888:3888
+    networks:
+      - btacoin
+
+
+SNIPPET 6.3      
+Change the "OrdererType" parameter from:
+OrdererType: solo
+	to:
+OrdererType: kafka
+
+
+SNIPPET 6.4
+    Kafka:
+      Brokers:
+        - kafkaServer1.btacoin.com:9092
+        - kafkaServer2.btacoin.com:9092
+
+
+SNIPPET 6.5
+          - *courseParticipants
+
+
+SNIPPET 6.6
+cd ~/Desktop/fabric/network/config
+rm btamembersonly.block btamembersonly.tx genesis.block
+
+
+SNIPPET 6.7
+configtxgen -profile DefaultBlockOrderingService -outputBlock ./genesis.block
+configtxgen -profile btaMembersOnly -outputCreateChannelTx ./btamembersonly.tx -channelID btamembersonly
+
+
+SNIPPET 6.8
+docker rm -f Andy.BTA.btacoin.com Devorderer.btacoin.com cli courseParticipantsCA.btacoin.com btaCA.btacoin.com
+
+
+SNIPPET 6.9
+cd ..
+docker-compose -f docker-compose.yml up -d Andy.BTA.btacoin.com Devorderer.btacoin.com cli courseParticipantsCA.btacoin.com btaCA.btacoin.com zkServer1.btacoin.com zkServer2.btacoin.com zkServer3.btacoin.com kafkaServer1.btacoin.com kafkaServer2.btacoin.com
+
+
+SNIPPET 6.10
+  WorldStateCouchAndy:
+    container_name: WorldStateCouchAndy
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=Andy
+      - COUCHDB_PASSWORD=SimplePassword
+    ports:
+      - 5984:5984
+    networks:
+      - btacoin
+
+
+SNIPPET 6.11
+      - WorldStateCouchAndy
+
+
+SNIPPET 6.12   
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=WorldStateCouchAndy:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=Andy
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=SimplePassword
+
+
+SNIPPET 6.13
+cd ~/Desktop/fabric/network
+docker-compose -f docker-compose.yml restart Andy.BTA.btacoin.com
+
+
+****** SNIPPET 6.14
+docker-compose -f docker-compose.yml up -d WorldStateCouchAndy
+
+
+SNIPPET 6.15
+docker ps
+
+
+SNIPPET 6.16
+  Ken.courseParticipants.btacoin.com:
+    container_name: Ken.courseParticipants.btacoin.com
+    image: hyperledger/fabric-peer
+    environment:
+      - CORE_PEER_ID=Ken.courseParticipants.btacoin.com
+      - CORE_PEER_ADDRESS=Ken.courseParticipants.btacoin.com:8051
+      - FABRIC_LOGGING_SPEC=debug
+      - CORE_CHAINCODE_LOGGING_LEVEL=debug
+      - CORE_PEER_LOCALMSPID=courseParticipantsMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/peer/
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=${COMPOSE_PROJECT_NAME}_btacoin
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=WorldStateCouchKen:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=Ken
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=SimplePassword
+    working_dir: /etc/hyperledger/configtx
+    command: peer node start
+    ports:
+      - 8051:7051
+      - 8053:7053
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./crypto-config/peerOrganizations/courseParticipants.btacoin.com/peers/Ken.courseParticipants.btacoin.com/msp:/etc/hyperledger/msp/peer
+      - ./crypto-config/peerOrganizations/courseParticipants.btacoin.com/users:/etc/hyperledger/msp/users
+      - ./config:/etc/hyperledger/configtx
+    depends_on:
+      - Devorderer.btacoin.com
+      - WorldStateCouchKen
+    networks:
+      - btacoin
+      
+      
+  WorldStateCouchKen:
+    container_name: WorldStateCouchKen
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=Ken
+      - COUCHDB_PASSWORD=SimplePassword
+    ports:
+      - 6984:5984
+    networks:
+      - btacoin
+
+
+
+**************** LAB 07
+SNIPPET 7.1
+  CoinExchangeChannel:
+    Consortium: NetworkConsortium
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *BTA
+        - *courseParticipants
+
+
+SNIPPET 7.2
+cd ~/Desktop/fabric/network
+configtxgen -profile CoinExchangeChannel -outputCreateChannelTx ./config/coinexchangechannel.tx -channelID coinexchangechannel
+
+
+***** SNIPPET 7.3
+docker exec -e "CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/users/Admin@BTA.btacoin.com/msp" -e "CORE_PEER_LOCALMSPID=BTAMSP" -it Andy.BTA.btacoin.com sh
+
+
+SNIPPET 7.4
+cd /etc/hyperledger/configtx
+peer channel create -o Devorderer.btacoin.com:7050 -f /etc/hyperledger/configtx/btamembersonly.tx -c btamembersonly
+
+
+SNIPPET 7.5
+peer channel join -b btamembersonly.block
+
+
+SNIPPET 7.6
+peer channel create -o Devorderer.btacoin.com:7050 -f /etc/hyperledger/configtx/coinexchangechannel.tx -c coinexchangechannel
+
+
+SNIPPET 7.7
+peer channel join -b coinexchangechannel.block
+
+
+SNIPPET 7.8
+peer channel list
+
+
+SNIPPET 7.9
+exit
+
+****** SNIPPET 7.9.1
+docker-compose -f docker-compose.yml up -d Ken.courseParticipants.btacoin.com
+
+****** SNIPPET 7.10
+docker exec -e "CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/msp/users/Admin@courseParticipants.btacoin.com/msp" -e "CORE_PEER_LOCALMSPID=courseParticipantsMSP" -e "CORE_PEER_ADDRESS=Ken.courseParticipants.btacoin.com:7051" -it Ken.courseParticipants.btacoin.com sh
+
+
+SNIPPET 7.11
+cd /etc/hyperledger/configtx
+peer channel join -b coinexchangechannel.block
+
+
+SNIPPET 7.12
+peer channel list
+
+
+SNIPPET 7.13
+exit
+
+
+
+********************* LAB 8
+SNIPPET 8.1
+cd ~/Desktop/fabric/network/
+
+
+SNIPPET 8.2
+docker rm -f courseParticipantsCA.btacoin.com
+
+
+SNIPPET 8.3
+REPLACE:
+    command: sh -c 'fabric-ca-server start -b courseParticipantsCA:SimplePassword'
+WITH:
+    command: sh -c 'sleep 100000'    
+
+
+SNIPPET 8.4
+    command: sh -c 'sleep 100000'    
+
+
+SNIPPET 8.5
+docker-compose -f docker-compose.yml up -d courseParticipantsCA.btacoin.com btaCA.btacoin.com
+
+
+SNIPPET 8.6
+docker exec -it btaCA.btacoin.com bash
+
+
+SNIPPET 8.7
+cd /etc/hyperledger/fabric-ca-server
+rm ca-cert.pem ca-key.pem fabric-ca-server-config.yaml
+
+
+SNIPPET 8.8
+fabric-ca-server init -b btaCA:SimplePassword
+
+
+SNIPPET 8.9
+fabric-ca-server start -b btaCA:SimplePassword -p 8000
+
+
+SNIPPET 8.10
+cd ~/Desktop/fabric/network/
+
+
+SNIPPET 8.11
+docker exec -it btaCA.btacoin.com bash
+
+
+SNIPPET 8.12
+fabric-ca-client enroll -u http://btaCA:SimplePassword@localhost:8000 -M FABRIC_CA_HOME/msp/
+
+
+SNIPPET 8.13
+fabric-ca-client register --id.name btaAdministrator --id.affiliation org1 --id.type admin --id.attrs '"hf.Registrar.Roles=peer", hf.GenCRL=true, admin=true:ecert' --id.secret BTARocks -u http://localhost:8000
+
+
+SNIPPET 8.14
+fabric-ca-client enroll -u http://btaAdministrator:BTARocks@localhost:8000 -M ./msp/Org1Administrator
+
+
+SNIPPET 8.15
+fabric-ca-client register --id.name JohnC --id.affiliation org1 --id.type peer --id.secret peerpw -u http://btaAdministrator:BTARocks@localhost:8000
+
+
+SNIPPET 8.16
+fabric-ca-client enroll -u http://JohnC:peerpw@localhost:8000 -M ./msp/JohnC
+
+
+SNIPPET 8.17
+cd ~/Desktop/fabric/network/
+
+
+SNIPPET 8.18
+docker exec -it courseParticipantsCA bash
+
+
+SNIPPET 8.19
+cd $FABRIC_CA_HOME
+
+
+SNIPPET 8.20
+fabric-ca-server init -b AdminCourseParticipants:AdminsRock
+
+
+SNIPPET 8.21
+fabric-ca-server start -b AdminCourseParticipants:AdminsRock -p 8000
+
+
+SNIPPET 8.22
+cd ~/Desktop/fabric/network/
+
+
+SNIPPET 8.23
+docker exec -it courseParticipantsCA bash
+
+
+SNIPPET 8.24
+fabric-ca-client enroll -u http://AdminCourseParticipants:AdminsRock@localhost:8000
+
+
+SNIPPET 8.25
+fabric-ca-client register --id.name ParticipantsAdministrator --id.type admin --id.attrs '"hf.Registrar.Roles=peer,user", hf.GenCRL=true,admin=true:ecert' --id.secret adminPassword -u http://localhost:8000
+
+
+SNIPPET 8.26
+fabric-ca-client enroll -u http://ParticipantsAdministrator:adminPassword@localhost:8000 -M ./msp/ParticipantsAdministrator
+
+
+SNIPPET 8.27
+fabric-ca-client register --id.name Rita --id.type client --id.attrs 'admin=false:ecert, hf.Registrar.Roles=peer' --id.secret SamplePassword -u http://localhost:8000
+
+
+SNIPPET 8.28
+fabric-ca-client enroll -u http://Rita:SamplePassword@localhost:8000
+
+
+SNIPPET 8.29
+fabric-ca-client identity modify Rita --type peer --secret ritaIsTheBest -u http://localhost:8000
+
+
+SNIPPET 8.30
+fabric-ca-client revoke -e Rita -r 'HackingAttempt' -u http://courseParticipantsCA:SimplePassword@localhost:8000
+
